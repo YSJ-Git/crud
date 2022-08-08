@@ -1,26 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "mabinogi";
+  src: url("../public/fonts/Mabinogi_Classic_TTF.ttf");
+}
+
 html,
 body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: mabinogi;
+  background-color: #004cc8;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.ql-toolbar:first-of-type {
+  display: none;
+}
+.ql-container.ql-snow {
+  height: 250px;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-  body {
-    color: white;
-    background: black;
-  }
+.pagination.current > a {
+  color: rgb(252 211 77);
+  border-bottom: 1px solid rgb(252 211 77);
 }
