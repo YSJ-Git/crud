@@ -1,6 +1,7 @@
 import { useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { Formik, ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
@@ -266,10 +267,15 @@ const NoticePostComp = () => {
             <div className="flex justify-center mt-4">
               <button
                 type="submit"
-                className="bg-pink-500 w-24 inline-block text-center py-2 text-white"
+                className="bg-pink-500 w-24 inline-block text-center py-2 text-white mr-2"
               >
                 글쓰기
               </button>
+              <Link href="/crud/?page=1">
+                <a className="bg-pink-500 w-24 inline-block text-center py-2 text-white">
+                  취소
+                </a>
+              </Link>
             </div>
           </form>
         )}
