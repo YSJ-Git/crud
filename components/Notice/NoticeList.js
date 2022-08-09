@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import axios from "axios";
 import baseApiUrl from "../../utils/baseApiUrl";
@@ -93,6 +92,13 @@ const NoticeList = ({ data, page }) => {
             ))
           )}
         </ul>
+        <div className="flex justify-center mt-4">
+          <Link href="/crud/post">
+            <a className="bg-pink-500 w-24 inline-block text-center py-2 text-white">
+              글쓰기
+            </a>
+          </Link>
+        </div>
       </div>
     </div>
   );

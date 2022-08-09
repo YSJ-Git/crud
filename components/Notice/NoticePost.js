@@ -1,9 +1,12 @@
 import { useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 import { Formik, ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
+import Swal from "sweetalert2";
 import baseApiUrl from "../../utils/baseApiUrl";
 import axios from "axios";
+import TopBar from "./TopBar";
 
 import "react-quill/dist/quill.snow.css";
 
@@ -18,8 +21,9 @@ const QuillWrapper = dynamic(
 );
 
 const NoticePostComp = () => {
+  const router = useRouter();
   const quillRef = useRef(null);
-  const FILE_SIZE = 50 * 1024 * 1024; //50mb
+  const FILE_SIZE = 1 * 1024 * 1024; //1mb
   // 가능한 확장자
   const SUPPORTED_FORMATS = [
     "image/jpg",
@@ -91,25 +95,37 @@ const NoticePostComp = () => {
     const { file, ...rest } = data;
     formData.append("files.file", data.file);
     formData.append("data", JSON.stringify(rest));
-    axios.post(`${baseApiUrl}/api/notices`, formData, {
-      headers: { "content-type": "multipart/form-data" },
-    });
+    axios
+      .post(`${baseApiUrl}/api/notices`, formData, {
+        headers: { "content-type": "multipart/form-data" },
+      })
+      .then((res) => {
+        console.log("완료응답:", res);
+        Swal.fire({
+          title: "글쓰기가 완료되었습니다.",
+          text: "Post Success",
+          icon: "success",
+          confirmButtonText: "확인",
+        });
+        router.push(`/crud/view/${res.data.data.id}?page=1`);
+      });
   };
   return (
-    <>
+    <div className="relative max-w-3xl mx-auto my-0">
+      <TopBar />
       <Formik
         initialValues={{ title: "", content: "", writer: "", file: [] }}
         validationSchema={Yup.object({
           title: Yup.string()
             .max(30, "30자 이하로 입력해주세요.")
-            .required("Required"),
-          writer: Yup.string().max(30, "30자 이하로 입력해주세요."),
+            .required("제목을 반드시 입력해주세요."),
+          writer: Yup.string().max(30, "작성자는 30자 이하로 입력해주세요."),
           content: Yup.string().max(500, "500자 이하로 입력해주세요."),
           file: Yup.mixed()
             .nullable()
             .test(
               "fileSize",
-              "파일크기는 50MB 이하로 업로드 해주세요.",
+              "파일크기는 1MB 이하로 업로드 해주세요.",
               (value) => {
                 if (value && value.length) {
                   value.size <= FILE_SIZE;
@@ -151,31 +167,32 @@ const NoticePostComp = () => {
       >
         {(formik) => (
           <form onSubmit={formik.handleSubmit}>
-            <label htmlFor="title">제목</label>
+            <label htmlFor="title" className="hidden">
+              제목
+            </label>
             <input
               id="title"
               name="title"
               type="text"
+              className="text-2xl bg-amber-300 block text-black p-2 w-full"
+              placeholder="제목을 입력해주세요."
               {...formik.getFieldProps("title")}
             />
-            <ErrorMessage name="title" />
-            <label htmlFor="writer">작성자</label>
-            <input
-              id="writer"
-              name="writer"
-              type="text"
-              {...formik.getFieldProps("writer")}
-            />
-            <ErrorMessage name="writer" />
-            <label htmlFor="content">내용</label>
+            <ErrorMessage name="title">
+              {(msg) => <div className="bg-white text-red-600 p-2">{msg}</div>}
+            </ErrorMessage>
+
+            <label htmlFor="content" className="hidden">
+              내용
+            </label>
             <Field name="content" {...formik.getFieldProps("content")}>
-            
               {({ field }) => (
                 <QuillWrapper
                   //value={field.value}
                   onChange={field.onChange(field.name)}
                   modules={modules}
                   forwardedRef={quillRef}
+                  className="bg-white"
                 />
               )}
             </Field>
@@ -185,22 +202,79 @@ const NoticePostComp = () => {
               type="text"
               {...formik.getFieldProps("content")}
             /> */}
-            <ErrorMessage name="content" />
-            <label htmlFor="file">이미지 업로드</label>
-            <input
-              id="file"
-              name="file"
-              type="file"
-              onChange={(event) => {
-                formik.setFieldValue("file", event.currentTarget.files[0]);
-              }}
-            />
-            <ErrorMessage name="file" />
-            <button type="submit">글쓰기</button>
+
+            {formik.errors.content && (
+              <div className="bg-white text-red-600 p-2">
+                {formik.errors.content}
+              </div>
+            )}
+
+            {/* <ErrorMessage name="content">
+              {(msg) => <div className="bg-white text-red-600 p-2">{msg}</div>}
+            </ErrorMessage>*/}
+            <div className="py-4">
+              <label htmlFor="file" className="pr-2 text-white">
+                이미지 업로드
+              </label>
+              <input
+                id="file"
+                name="file"
+                type="file"
+                className="text-white"
+                onChange={(event) => {
+                  formik.setFieldValue("file", event.currentTarget.files[0]);
+                }}
+              />
+              <ErrorMessage name="file">
+                {(msg) => (
+                  <div className="bg-white text-red-600 p-2 ml-2">{msg}</div>
+                )}
+              </ErrorMessage>
+            </div>
+
+            <div className="flex items-center">
+              <label htmlFor="writer" className="hidden">
+                작성자
+              </label>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 inline-block mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="#fff"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <input
+                id="writer"
+                name="writer"
+                type="text"
+                placeholder="작성자"
+                {...formik.getFieldProps("writer")}
+              />
+              <ErrorMessage name="writer">
+                {(msg) => (
+                  <div className="bg-white text-red-600 p-2 ml-2">{msg}</div>
+                )}
+              </ErrorMessage>
+            </div>
+            <div className="flex justify-center mt-4">
+              <button
+                type="submit"
+                className="bg-pink-500 w-24 inline-block text-center py-2 text-white"
+              >
+                글쓰기
+              </button>
+            </div>
           </form>
         )}
       </Formik>
-    </>
+    </div>
   );
 };
 

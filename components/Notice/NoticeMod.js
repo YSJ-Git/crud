@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 import { Formik, ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
 import baseApiUrl from "../../utils/baseApiUrl";
@@ -20,12 +21,13 @@ const QuillWrapper = dynamic(
 );
 
 const NoticePostComp = (noticeData) => {
-  console.log("!!", noticeData);
+  const router = useRouter();
+  //console.log("!!", noticeData);
   const quillRef = useRef(null);
   const noticeAttr = noticeData.noticeView.data.attributes;
   const files = noticeAttr.file.data;
   //console.log("파일: ", files);
-  const FILE_SIZE = 50 * 1024 * 1024; //1mb
+  const FILE_SIZE = 1 * 1024 * 1024; //1mb
   // 가능한 확장자
   const SUPPORTED_FORMATS = [
     "image/jpg",
@@ -113,7 +115,9 @@ const NoticePostComp = (noticeData) => {
           icon: "success",
           confirmButtonText: "확인",
         });
-        //router.push(`/crud/view/${noticeData.data.id}?page=${}`);
+        router.push(
+          `/crud/view/${noticeData.noticeView.data.id}?page=${noticeData.page}`
+        );
       })
       .catch((error) => {
         console.log("ERROR: ", error);
@@ -133,14 +137,14 @@ const NoticePostComp = (noticeData) => {
         validationSchema={Yup.object({
           title: Yup.string()
             .max(30, "30자 이하로 입력해주세요.")
-            .required("Required"),
-          writer: Yup.string().max(30, "30자 이하로 입력해주세요."),
+            .required("제목을 반드시 입력해주세요."),
+          writer: Yup.string().max(30, "작성자는 30자 이하로 입력해주세요."),
           content: Yup.string().max(500, "500자 이하로 입력해주세요."),
           file: Yup.mixed()
             .nullable()
             .test(
               "fileSize",
-              "파일크기는 50MB 이하로 업로드 해주세요.",
+              "파일크기는 1MB 이하로 업로드 해주세요.",
               // (value) => value && value.size <= FILE_SIZE
               (value) => {
                 //console.log("VALUE: ", value);
@@ -197,7 +201,9 @@ const NoticePostComp = (noticeData) => {
               className="text-2xl bg-amber-300 block text-black p-2 w-full"
               {...formik.getFieldProps("title")}
             />
-            <ErrorMessage name="title" />
+            <ErrorMessage name="title">
+              {(msg) => <div className="bg-white text-red-600 p-2">{msg}</div>}
+            </ErrorMessage>
             <label htmlFor="content" className="hidden">
               내용
             </label>
@@ -218,7 +224,15 @@ const NoticePostComp = (noticeData) => {
               type="text"
               {...formik.getFieldProps("content")}
             /> */}
-            <ErrorMessage name="content" />
+            {formik.errors.content && (
+              <div className="bg-white text-red-600 p-2">
+                {formik.errors.content}
+              </div>
+            )}
+
+            {/* <ErrorMessage name="content">
+              {(msg) => <div className="bg-white text-red-600 p-2">{msg}</div>}
+            </ErrorMessage>*/}
             <div className="py-4">
               <label htmlFor="file" className="pr-2 text-white">
                 이미지 업로드
@@ -232,7 +246,11 @@ const NoticePostComp = (noticeData) => {
                   formik.setFieldValue("file", event.currentTarget.files[0]);
                 }}
               />
-              <ErrorMessage name="file" />
+              <ErrorMessage name="file">
+                {(msg) => (
+                  <div className="bg-white text-red-600 p-2 ml-2">{msg}</div>
+                )}
+              </ErrorMessage>
             </div>
 
             <label htmlFor="writer" className="hidden">
@@ -259,7 +277,11 @@ const NoticePostComp = (noticeData) => {
                 type="text"
                 {...formik.getFieldProps("writer")}
               />
-              <ErrorMessage name="writer" />
+              <ErrorMessage name="writer">
+                {(msg) => (
+                  <div className="bg-white text-red-600 p-2 ml-2">{msg}</div>
+                )}
+              </ErrorMessage>
             </div>
             <div className="flex justify-center mt-4">
               <button
