@@ -13,9 +13,9 @@ body {
   background-color: #004cc8;
 }
 
-.ql-toolbar:first-of-type {
+/*.ql-toolbar:first-of-type {
   display: none;
-}
+}*/
 .ql-container.ql-snow {
   height: 250px;
 }
