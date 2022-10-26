@@ -121,7 +121,7 @@ const MenuBar = ({ editor }) => {
   );
 };
 
-export default (props) => {
+const TibTap = (props) => {
   const editor = useEditor({
     extensions: [StarterKit],
     content: `${props.content}`,
@@ -137,3 +137,21 @@ export default (props) => {
     </div>
   );
 };
+
+export default TibTap;
+// export default (props) => {
+//   const editor = useEditor({
+//     extensions: [StarterKit],
+//     content: `${props.content}`,
+//     onUpdate({ editor }) {
+//       props.onChange(editor.getHTML());
+//     },
+//   });
+
+//   return (
+//     <div>
+//       <MenuBar editor={editor} />
+//       <EditorContent editor={editor} />
+//     </div>
+//   );
+// };
