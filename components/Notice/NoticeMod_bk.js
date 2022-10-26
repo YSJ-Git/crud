@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Formik, ErrorMessage, Field } from "formik";
@@ -7,13 +8,25 @@ import baseApiUrl from "../../utils/baseApiUrl";
 import axios from "axios";
 import Swal from "sweetalert2";
 import TopBar from "./TopBar";
-import MenuBar from "./MenuBar";
+
+import "react-quill/dist/quill.snow.css";
+
+const QuillWrapper = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill");
+    return function comp({ forwardedRef, ...props }) {
+      return <RQ ref={forwardedRef} {...props} />;
+    };
+  },
+  { ssr: false }
+);
 
 const NoticePostComp = (noticeData) => {
+  const [test, setTest] = useState("");
   const router = useRouter();
   //console.log("!!", noticeData);
+  const quillRef = useRef(null);
   const noticeAttr = noticeData.noticeView.data.attributes;
-  const [contentValue, setContentValue] = useState(noticeAttr.content);
   const files = noticeAttr.file.data;
   //console.log("파일: ", files);
   const FILE_SIZE = 1 * 1024 * 1024; //1mb
@@ -25,10 +38,65 @@ const NoticePostComp = (noticeData) => {
     "image/png",
   ];
 
-  const contentChange = (content) => {
-    setContentValue(content);
+  const handleImage = () => {
+    const input = document.createElement("input");
+
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    document.body.appendChild(input);
+
+    input.click();
+
+    input.onchange = async (e) => {
+      const [file] = input.files;
+
+      //strapi 업로드 후 이미지 url 받아오기
+      //console.log("file: ", e.target.files[0]);
+      const formData = new FormData();
+      formData.append("files", e.target.files[0]);
+      const imgUrl = await axios
+        .post(`${baseApiUrl}/api/upload/`, formData, {
+          headers: { "content-type": "multipart/form-data" },
+        })
+        .then(function (response) {
+          //console.log("리스펀스: ", response.data[0].url);
+          return response.data[0].url;
+        });
+      //console.log("이미지url: ", imgUrl);
+
+      // 현재 커서 위치에 이미지를 삽입하고 커서 위치를 +1 하기
+      const range = quillRef.current.getEditor().getSelection();
+      quillRef.current.getEditor().insertEmbed(range.index, "image", imgUrl);
+      quillRef.current.getEditor().setSelection(range.index + 1);
+      document.body.querySelector(":scope > input").remove();
+    };
   };
 
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          [{ header: "1" }, { header: "2" }, { font: [] }],
+          [{ size: [] }],
+          ["bold", "italic", "underline", "strike", "blockquote"],
+          [
+            { list: "ordered" },
+            { list: "bullet" },
+            { indent: "-1" },
+            { indent: "+1" },
+          ],
+          [{ script: "sub" }, { script: "super" }],
+          ["link", "image", "video"],
+        ],
+        clipboard: {
+          // toggle to add extra line breaks when pasting HTML:
+          matchVisual: false,
+        },
+        handlers: { image: handleImage },
+      },
+    }),
+    []
+  );
   const putNotice = async (data) => {
     const formData = new FormData();
     const { file, ...rest } = data;
@@ -62,7 +130,6 @@ const NoticePostComp = (noticeData) => {
     <div className="relative max-w-3xl mx-auto my-0">
       <TopBar />
       <Formik
-        enableReinitialize={true}
         initialValues={{
           title: `${noticeAttr.title}`,
           content: `${noticeAttr.content}`,
@@ -88,6 +155,16 @@ const NoticePostComp = (noticeData) => {
                 } else {
                   return true;
                 }
+
+                // if (
+                //   value.length &&
+                //   (value.length === 0 || value.length === undefined)
+                // ) {
+                //   console.log("결과: ", value.size <= FILE_SIZE);
+                //   return true;
+                // } else {
+                //   value.size <= FILE_SIZE;
+                // }
               }
             )
             .test(
@@ -99,6 +176,14 @@ const NoticePostComp = (noticeData) => {
                 } else {
                   return true;
                 }
+                // if (
+                //   (value.length && value.length === 0) ||
+                //   value.length === undefined
+                // ) {
+                //   return true;
+                // } else {
+                //   value && SUPPORTED_FORMATS.includes(value.type);
+                // }
               }
             ),
         })}
@@ -124,23 +209,21 @@ const NoticePostComp = (noticeData) => {
             <label htmlFor="content" className="hidden">
               내용
             </label>
-            <div className="tiptab bg-white p-2">
-              <MenuBar content={contentValue} onChange={contentChange} />
-            </div>
-            <div className="field hidden">
-              <Field
-                id="content"
-                name="content"
-                value={formik.values.content}
-                onChange={(formik.values.content = contentValue)}
-                {...formik.getFieldProps("content")}
-              ></Field>
-            </div>
+            <Field name="content" {...formik.getFieldProps("content")}>
+              {({ field }) => (
+                <QuillWrapper
+                  value={field.value}
+                  //onChange={field.onChange(field.name)}
+                  modules={modules}
+                  forwardedRef={quillRef}
+                  className="bg-white"
+                />
+              )}
+            </Field>
             {/* <input
               id="content"
               name="content"
               type="text"
-              value={contentValue}
               {...formik.getFieldProps("content")}
             /> */}
             {formik.errors.content && (
@@ -148,6 +231,7 @@ const NoticePostComp = (noticeData) => {
                 {formik.errors.content}
               </div>
             )}
+
             {/* <ErrorMessage name="content">
               {(msg) => <div className="bg-white text-red-600 p-2">{msg}</div>}
             </ErrorMessage>*/}
@@ -170,6 +254,7 @@ const NoticePostComp = (noticeData) => {
                 )}
               </ErrorMessage>
             </div>
+
             <label htmlFor="writer" className="hidden">
               작성자
             </label>

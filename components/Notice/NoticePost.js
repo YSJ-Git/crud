@@ -1,5 +1,4 @@
-import { useMemo, useRef } from "react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Formik, ErrorMessage, Field } from "formik";
@@ -8,22 +7,11 @@ import Swal from "sweetalert2";
 import baseApiUrl from "../../utils/baseApiUrl";
 import axios from "axios";
 import TopBar from "./TopBar";
-
-import "react-quill/dist/quill.snow.css";
-
-const QuillWrapper = dynamic(
-  async () => {
-    const { default: RQ } = await import("react-quill");
-    return function comp({ forwardedRef, ...props }) {
-      return <RQ ref={forwardedRef} {...props} />;
-    };
-  },
-  { ssr: false }
-);
+import MenuBar from "./MenuBar";
 
 const NoticePostComp = () => {
+  const [contentValue, setContentValue] = useState("");
   const router = useRouter();
-  const quillRef = useRef(null);
   const FILE_SIZE = 1 * 1024 * 1024; //1mb
   // 가능한 확장자
   const SUPPORTED_FORMATS = [
@@ -32,64 +20,10 @@ const NoticePostComp = () => {
     "image/gif",
     "image/png",
   ];
-  const handleImage = () => {
-    const input = document.createElement("input");
 
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    document.body.appendChild(input);
-
-    input.click();
-
-    input.onchange = async (e) => {
-      const [file] = input.files;
-
-      //strapi 업로드 후 이미지 url 받아오기
-      //console.log("file: ", e.target.files[0]);
-      const formData = new FormData();
-      formData.append("files", e.target.files[0]);
-      const imgUrl = await axios
-        .post(`${baseApiUrl}/api/upload/`, formData, {
-          headers: { "content-type": "multipart/form-data" },
-        })
-        .then(function (response) {
-          //console.log("리스펀스: ", response.data[0].url);
-          return response.data[0].url;
-        });
-      console.log("이미지url: ", imgUrl);
-
-      // 현재 커서 위치에 이미지를 삽입하고 커서 위치를 +1 하기
-      const range = quillRef.current.getEditor().getSelection();
-      quillRef.current.getEditor().insertEmbed(range.index, "image", imgUrl);
-      quillRef.current.getEditor().setSelection(range.index + 1);
-      document.body.querySelector(":scope > input").remove();
-    };
+  const contentChange = (content) => {
+    setContentValue(content);
   };
-  const modules = useMemo(
-    () => ({
-      toolbar: {
-        container: [
-          [{ header: "1" }, { header: "2" }, { font: [] }],
-          [{ size: [] }],
-          ["bold", "italic", "underline", "strike", "blockquote"],
-          [
-            { list: "ordered" },
-            { list: "bullet" },
-            { indent: "-1" },
-            { indent: "+1" },
-          ],
-          [{ script: "sub" }, { script: "super" }],
-          ["link", "image", "video"],
-        ],
-        clipboard: {
-          // toggle to add extra line breaks when pasting HTML:
-          matchVisual: false,
-        },
-        handlers: { image: handleImage },
-      },
-    }),
-    []
-  );
 
   const postNotice = async (data) => {
     const formData = new FormData();
@@ -133,15 +67,6 @@ const NoticePostComp = () => {
                 } else {
                   return true;
                 }
-                // if (
-                //   value.length &&
-                //   (value.length === 0 || value.length === undefined)
-                // ) {
-                //   console.log("결과: ", value.size <= FILE_SIZE);
-                //   return true;
-                // } else {
-                //   value.size <= FILE_SIZE;
-                // }
               }
             )
             .test(
@@ -153,12 +78,6 @@ const NoticePostComp = () => {
                 } else {
                   return true;
                 }
-
-                // if (value.length === 0) {
-                //   return true;
-                // } else {
-                //   value && SUPPORTED_FORMATS.includes(value.type);
-                // }
               }
             ),
         })}
@@ -186,17 +105,18 @@ const NoticePostComp = () => {
             <label htmlFor="content" className="hidden">
               내용
             </label>
-            <Field name="content" {...formik.getFieldProps("content")}>
-              {({ field }) => (
-                <QuillWrapper
-                  //value={field.value}
-                  onChange={field.onChange(field.name)}
-                  modules={modules}
-                  forwardedRef={quillRef}
-                  className="bg-white"
-                />
-              )}
-            </Field>
+            <div className="tiptab bg-white p-2">
+              <MenuBar content={contentValue} onChange={contentChange} />
+            </div>
+            <div className="field hidden">
+              <Field
+                id="content"
+                name="content"
+                value={formik.values.content}
+                onChange={(formik.values.content = contentValue)}
+                {...formik.getFieldProps("content")}
+              ></Field>
+            </div>
             {/* <input
               id="content"
               name="content"

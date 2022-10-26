@@ -12,10 +12,28 @@ body {
   font-family: mabinogi;
   background-color: #004cc8;
 }
+h1 {
+  font-size: 2.2em;
+}
+h2 {
+  font-size: 2em;
+}
+h3 {
+  font-size: 1.8em;
+}
+h4 {
+  font-size: 1.6em;
+}
+h5 {
+  font-size: 1.4em;
+}
+h6 {
+  font-size: 1.2em;
+}
 
-/*.ql-toolbar:first-of-type {
+.ql-toolbar:first-of-type {
   display: none;
-}*/
+}
 .ql-container.ql-snow {
   height: 250px;
 }
@@ -23,4 +41,73 @@ body {
 .pagination.current > a {
   color: rgb(252 211 77);
   border-bottom: 1px solid rgb(252 211 77);
+}
+
+/* Tibtap */
+.ProseMirror {
+  padding: 10px;
+}
+.ProseMirror > * + * {
+  margin-top: 0.75em;
+}
+.ProseMirror ul,
+.ProseMirror ol {
+  padding: 0 1rem;
+}
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  line-height: 1.1;
+}
+.ProseMirror code {
+  background-color: rgba(97, 97, 97, 0.1);
+  color: #616161;
+}
+.ProseMirror pre {
+  background: #0d0d0d;
+  color: #fff;
+  font-family: "JetBrainsMono", monospace;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+}
+.ProseMirror pre code {
+  color: inherit;
+  padding: 0;
+  background: none;
+  font-size: 0.8rem;
+}
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+.ProseMirror blockquote {
+  padding-left: 1rem;
+  border-left: 2px solid rgba(13, 13, 13, 0.1);
+}
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid rgba(13, 13, 13, 0.1);
+  margin: 2rem 0;
+}
+.ProseMirror ul > li {
+  list-style: circle;
+}
+.ProseMirror ol > li {
+  list-style: decimal;
+}
+.tiptab_btns {
+  border-bottom: 1px solid #d7d7d7;
+}
+.tiptab_btns > div {
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+.tiptab_btns > div.is-active {
+  background-color: #0d0d0d;
+  color: #fff;
 }
